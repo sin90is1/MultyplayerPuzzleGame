@@ -51,6 +51,16 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
+	void Sprint();
+
+	void StopSprint();
+
+	void StartCrouch();
+
+	void StopCrouch();
+
+	bool bIsSprinting = false;
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

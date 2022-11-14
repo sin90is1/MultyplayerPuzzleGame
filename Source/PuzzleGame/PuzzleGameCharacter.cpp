@@ -49,6 +49,8 @@ APuzzleGameCharacter::APuzzleGameCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +62,14 @@ void APuzzleGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APuzzleGameCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APuzzleGameCharacter::StopSprint);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APuzzleGameCharacter::StartCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APuzzleGameCharacter::StopCrouch);
+
 
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &APuzzleGameCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &APuzzleGameCharacter::MoveRight);
@@ -87,6 +97,26 @@ void APuzzleGameCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector L
 	StopJumping();
 }
 
+void APuzzleGameCharacter::Sprint()
+{
+	bIsSprinting = true;
+}
+
+void APuzzleGameCharacter::StopSprint()
+{
+	bIsSprinting = false;
+}
+
+void APuzzleGameCharacter::StartCrouch()
+{
+	Crouch();
+}
+
+void APuzzleGameCharacter::StopCrouch()
+{
+	UnCrouch();
+}
+
 void APuzzleGameCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
@@ -107,6 +137,9 @@ void APuzzleGameCharacter::MoveForward(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
+		if (!bIsSprinting)
+			Value *= 0.7;
+
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
@@ -120,7 +153,10 @@ void APuzzleGameCharacter::MoveRight(float Value)
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
+		if (!bIsSprinting)
+			Value *= 0.7;
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
